@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "704929752221",
+    "project_id": "project-bee1",
+    "storage_bucket": "project-bee1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:704929752221:android:578cb54a10f9f72d0e6074",
+        "android_client_info": {
+          "package_name": "com.example.bee3"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1p4wPt5rvQKNeJlQw-9P6XHmq4MbJ1as"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:704929752221:android:fef61248e9e535880e6074",
+        "android_client_info": {
+          "package_name": "com.example.bee_hive3"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1p4wPt5rvQKNeJlQw-9P6XHmq4MbJ1as"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
