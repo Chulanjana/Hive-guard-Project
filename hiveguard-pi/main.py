@@ -37,49 +37,93 @@ def push_to_firebase(payload):
         else:
             print("❌ Firebase error:", response.text)
     except Exception as e:
-        print("🔥 Error pushing to Firebase:", e)
+        print("❌ Error pushing to Firebase:", e)
 
 
-# Main loop
-while True:
-    # 1. Read temperature and humidity
-    outside_temp, outside_hum = read_temp_hum_outside()
-    inside_temp, inside_hum = read_temp_hum_inside()
+def generate_alert(message):
+    return "true", message
 
-    # 2. Get MFCC from mic
-    # mfccs = record_audio_and_extract_mfcc()
 
-    # 2. Extract MFCCs from audio file
-    mfccs = extract_audio_features("test_trimmed.wav")
+# Function define hive health
+def setHealth(qp, qa, anomaly):
+    # All ideal conditions
+    if qp == "Yes" and qa == "Accepted" and anomaly == "Normal":
+        return "Healthy Colony"
 
-    # 3. Run inference
-    results = run_inference(
-        model_qp,
-        model_qa,
-        model_anomaly,
-        outside_temp,
-        outside_hum,
-        inside_temp,
-        inside_hum,
-        mfccs,
-    )
+    # Any sign of deviation from one factor
+    if (
+        (qp == "Yes" and qa == "Accepted" and anomaly == "Anomaly")
+        or (qp == "Yes" and qa == "Not Accepted" and anomaly == "Normal")
+        or (qp == "No" and qa == "Unavailable" and anomaly == "Normal")
+    ):
+        return "Unhealthy Colony"
 
-    # 5. Create payload
-    payload = {
-        "outside_temp": outside_temp,
-        "outside_humidity": outside_hum,
-        "inside_temp": inside_temp,
-        "inside_humidity": inside_hum,
-        "queen_presence": results["queen_presence"],
-        "queen_acceptance":results["queen_acceptance"],
-        "anomaly": results["anomaly"],
-        "last_updated": datetime.datetime.utcnow().isoformat() + "Z",
-    }
+    # Multiple issues detected
+    if (qp == "Yes" and qa == "Not Accepted" and anomaly == "Anomaly") or (
+        qp == "No" and qa == "Unavailable" and anomaly == "Anomaly"
+    ):
+        return "Health is critical"
 
-    print("Payload:", payload)
+    # Unexpected combination
+    return "Unknown Health State"
 
-    # 6. Send to Firebase
-    push_to_firebase(payload)
 
-    # 7. Wait before next run
-    time.sleep(10)
+try:
+    # Main loop
+    while True:
+        # 1. Read temperature and humidity
+        outside_temp, outside_hum = read_temp_hum_outside()
+        inside_temp, inside_hum = read_temp_hum_inside()
+
+        # 2. Get MFCC from mic
+        mfccs = record_audio_and_extract_mfcc()
+
+        # 2. Extract MFCCs from audio file
+        # mfccs = extract_audio_features("test_trimmed.wav")
+
+        # 3. Run inference
+        results = run_inference(
+            model_qp,
+            model_qa,
+            model_anomaly,
+            outside_temp,
+            outside_hum,
+            inside_temp,
+            inside_hum,
+            mfccs,
+        )
+
+        health = setHealth(
+            results["queen_presence"], results["queen_acceptance"], results["anomaly"]
+        )
+
+        alert_trigger, alert_message = "false", ""
+
+        if health == "Health is critical":
+            alert_trigger, alert_message = generate_alert("Health is critical")
+
+        # 5. Create payload
+        payload = {
+            "outside_temp": outside_temp,
+            "outside_humidity": outside_hum,
+            "inside_temp": inside_temp,
+            "inside_humidity": inside_hum,
+            "queen_presence": results["queen_presence"],
+            "queen_acceptance": results["queen_acceptance"],
+            "anomaly": results["anomaly"],
+            "health": health,
+            "alert_trigger": alert_trigger,
+            "alert_message": alert_message,
+            "last_updated": datetime.datetime.utcnow().isoformat() + "Z",
+        }
+
+        print("Payload:", payload)
+
+        # 6. Send to Firebase
+        push_to_firebase(payload)
+
+        # 7. Wait before next run
+        time.sleep(10)
+
+except Exception as e:
+    print("❌ Fatal error in main loop:", e)
