@@ -1,0 +1,10 @@
+adafruit-circuitpython-dht==4.0.7
+numpy
+scipy
+scikit-learn==1.4.1.post1
+pandas
+pyaudio
+librosa
+soundfile
+requests
+python-dotenv
